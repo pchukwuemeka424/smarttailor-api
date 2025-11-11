@@ -137,10 +137,11 @@ Add these in your Vercel project settings:
 - `MONGODB_URI` - MongoDB connection string
 - `FLW_PUBLIC_KEY` - Flutterwave public key (if using payments)
 - `FLW_SECRET_KEY` - Flutterwave secret key (if using payments)
-- `AWS_ACCESS_KEY_ID` - AWS S3 access key (if using S3)
-- `AWS_SECRET_ACCESS_KEY` - AWS S3 secret key (if using S3)
-- `AWS_REGION` - AWS region (if using S3)
-- `AWS_S3_BUCKET_NAME` - S3 bucket name (if using S3)
+- `R2_ENDPOINT` - Cloudflare R2 endpoint URL (required for image uploads)
+- `R2_ACCESS_KEY_ID` - Cloudflare R2 access key ID (required for image uploads)
+- `R2_SECRET_ACCESS_KEY` - Cloudflare R2 secret access key (required for image uploads)
+- `R2_BUCKET_NAME` - Cloudflare R2 bucket name (required for image uploads)
+- `R2_PUBLIC_URL` - Cloudflare R2 public URL for accessing uploaded images (required for image uploads)
 - Any other environment variables your app requires
 
 ### Important Notes
@@ -151,9 +152,23 @@ Add these in your Vercel project settings:
 
 ## Environment Variables
 
+### Required
 - `MONGODB_URI` - MongoDB connection string
+
+### Optional
 - `PORT` - Server port (default: 3000, not used on Vercel)
 - `NODE_ENV` - Environment (development/production)
+
+### Image Upload (Cloudflare R2) - Required for image uploads
+- `R2_ENDPOINT` - Cloudflare R2 endpoint URL (e.g., `https://xxx.r2.cloudflarestorage.com`)
+- `R2_ACCESS_KEY_ID` - Cloudflare R2 access key ID
+- `R2_SECRET_ACCESS_KEY` - Cloudflare R2 secret access key
+- `R2_BUCKET_NAME` - Cloudflare R2 bucket name
+- `R2_PUBLIC_URL` - Cloudflare R2 public URL for accessing uploaded images (e.g., `https://pub-xxx.r2.dev`)
+
+### Payment (Flutterwave) - Required for payments
+- `FLW_PUBLIC_KEY` - Flutterwave public key
+- `FLW_SECRET_KEY` - Flutterwave secret key
 
 ## Database Models
 

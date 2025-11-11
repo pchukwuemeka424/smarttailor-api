@@ -1,26 +1,39 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
 
+// Validate required environment variables
+const R2_ENDPOINT = process.env.R2_ENDPOINT;
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+const BUCKET_NAME = process.env.R2_BUCKET_NAME;
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
+
+if (!R2_ENDPOINT || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !BUCKET_NAME || !R2_PUBLIC_URL) {
+  console.error('Missing required R2/S3 environment variables:');
+  if (!R2_ENDPOINT) console.error('  - R2_ENDPOINT');
+  if (!R2_ACCESS_KEY_ID) console.error('  - R2_ACCESS_KEY_ID');
+  if (!R2_SECRET_ACCESS_KEY) console.error('  - R2_SECRET_ACCESS_KEY');
+  if (!BUCKET_NAME) console.error('  - R2_BUCKET_NAME');
+  if (!R2_PUBLIC_URL) console.error('  - R2_PUBLIC_URL');
+  throw new Error('Missing required R2/S3 environment variables. Please check your .env file.');
+}
+
 // Cloudflare R2 S3-compatible configuration
 const s3Client = new S3Client({
   region: 'auto',
-  endpoint: process.env.R2_ENDPOINT || 'https://92055becfed13d33f141577af36f7c02.r2.cloudflarestorage.com',
+  endpoint: R2_ENDPOINT,
   credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || '8660c84559e163513ae19306134a570e',
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '116e3ad9e779ab10cb8f57c867ef1ade4b2253aa3466e9d498ab8335923d50e2',
+    accessKeyId: R2_ACCESS_KEY_ID,
+    secretAccessKey: R2_SECRET_ACCESS_KEY,
   },
 });
 
-const BUCKET_NAME = process.env.R2_BUCKET_NAME || 'smarttailor';
-// Public Development URL for R2 bucket
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-af2955759e104a75afd988971a35365f.r2.dev';
-
-// Log configuration on startup
+// Log configuration on startup (without exposing secrets)
 console.log('R2 S3 Configuration:');
-console.log('  Endpoint:', process.env.R2_ENDPOINT || 'https://92055becfed13d33f141577af36f7c02.r2.cloudflarestorage.com');
+console.log('  Endpoint:', R2_ENDPOINT);
 console.log('  Bucket:', BUCKET_NAME);
 console.log('  Public URL:', R2_PUBLIC_URL);
-console.log('  Access Key ID:', process.env.R2_ACCESS_KEY_ID ? '***configured***' : '8660c84559e163513ae19306134a570e');
+console.log('  Access Key ID:', R2_ACCESS_KEY_ID ? '***configured***' : 'MISSING');
 
 /**
  * Upload a file to S3 (Cloudflare R2)
@@ -77,7 +90,7 @@ export const uploadToS3 = async (fileBuffer, fileName, contentType) => {
       requestId: error.$metadata?.requestId,
       httpStatusCode: error.$metadata?.httpStatusCode,
       bucket: BUCKET_NAME,
-      endpoint: process.env.R2_ENDPOINT || 'https://92055becfed13d33f141577af36f7c02.r2.cloudflarestorage.com',
+      endpoint: R2_ENDPOINT,
     });
     
     // Provide more specific error messages
