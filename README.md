@@ -135,8 +135,8 @@ This backend is configured for deployment on Vercel.
 
 Add these in your Vercel project settings:
 - `MONGODB_URI` - MongoDB connection string
-- `FLW_PUBLIC_KEY` - Flutterwave public key (if using payments)
-- `FLW_SECRET_KEY` - Flutterwave secret key (if using payments)
+- `FLUTTERWAVE_PUBLIC_KEY` - Flutterwave public key (if using payments)
+- `FLUTTERWAVE_SECRET_KEY` - Flutterwave secret key (if using payments)
 - `R2_ENDPOINT` - Cloudflare R2 endpoint URL (required for image uploads)
 - `R2_ACCESS_KEY_ID` - Cloudflare R2 access key ID (required for image uploads)
 - `R2_SECRET_ACCESS_KEY` - Cloudflare R2 secret access key (required for image uploads)
@@ -167,8 +167,10 @@ Add these in your Vercel project settings:
 - `R2_PUBLIC_URL` - Cloudflare R2 public URL for accessing uploaded images (e.g., `https://pub-xxx.r2.dev`)
 
 ### Payment (Flutterwave) - Required for payments
-- `FLW_PUBLIC_KEY` - Flutterwave public key
-- `FLW_SECRET_KEY` - Flutterwave secret key
+- `FLUTTERWAVE_PUBLIC_KEY` - Flutterwave public key
+- `FLUTTERWAVE_SECRET_KEY` - Flutterwave secret key
+- `FLUTTERWAVE_ENCRYPTION_KEY` - Flutterwave encryption key (optional)
+- `BACKEND_URL` - Backend URL for payment callbacks (default: http://localhost:3000)
 
 ## Database Models
 
