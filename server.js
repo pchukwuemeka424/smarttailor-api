@@ -29,9 +29,11 @@ dotenv.config();
 const app = express();
 
 // Connect to database
+let dbConnectionReady = false;
 connectDB().then(() => {
   mongoose.connection.once('open', () => {
     console.log('Database connection established. Starting scheduled jobs...');
+    dbConnectionReady = true;
     startScheduledJobs();
   });
 }).catch(err => {
@@ -50,6 +52,72 @@ app.use(cors({
 // Only parse JSON for non-multipart requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Middleware to ensure database connection is ready
+app.use(async (req, res, next) => {
+  // Check if connection is ready
+  if (mongoose.connection.readyState === 1) {
+    return next();
+  }
+  
+  // If connecting, wait for it
+  if (mongoose.connection.readyState === 2) {
+    try {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Database connection timeout'));
+        }, 30000); // 30 second timeout
+        
+        mongoose.connection.once('connected', () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+        
+        mongoose.connection.once('error', (err) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+      });
+      return next();
+    } catch (error) {
+      console.error('Database connection error in middleware:', error);
+      return res.status(503).json({ 
+        message: 'Database connection not available',
+        error: 'Service temporarily unavailable'
+      });
+    }
+  }
+  
+  // If not connected, try to connect
+  try {
+    await connectDB();
+    // Wait for connection to be ready
+    if (mongoose.connection.readyState !== 1) {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Database connection timeout'));
+        }, 30000);
+        
+        mongoose.connection.once('connected', () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+        
+        mongoose.connection.once('error', (err) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+      });
+    }
+    return next();
+  } catch (error) {
+    console.error('Database connection error in middleware:', error);
+    return res.status(503).json({ 
+      message: 'Database connection failed',
+      error: 'Service temporarily unavailable'
+    });
+  }
+});
 
 // Routes
 app.use('/api/home', homeRoutes);

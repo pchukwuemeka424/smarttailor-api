@@ -8,6 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "create-admin": "node scripts/createAdmin.js",
+    "create-user": "node scripts/createUser.js",
     "init-settings": "node scripts/initAppSettings.js"
   },
   "keywords": [

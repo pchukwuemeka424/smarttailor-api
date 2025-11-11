@@ -33,7 +33,9 @@ const connectDB = async () => {
     }
 
     const conn = await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 30000, // Timeout after 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      connectTimeoutMS: 30000, // Give up initial connection after 30s
     });
     
     cachedConnection = conn;
