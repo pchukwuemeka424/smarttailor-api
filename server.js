@@ -24,6 +24,9 @@ import settingsRoutes from './routes/settings.js';
 // Load environment variables
 dotenv.config();
 
+// Check if running on Vercel (serverless)
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+
 // Initialize Express app
 const app = express();
 
@@ -51,9 +54,6 @@ const ensureDBConnection = async () => {
 };
 
 // For Vercel, connect on first request (lazy connection)
-// Vercel sets VERCEL or VERCEL_ENV environment variables
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-
 if (isVercel) {
   // Middleware to ensure DB connection on each request (for serverless)
   app.use(async (req, res, next) => {
@@ -179,7 +179,6 @@ app.use((req, res) => {
 export default app;
 
 // Start server only if not in Vercel environment
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
 if (!isVercel) {
   const PORT = process.env.PORT || 3000;
   const HOST = '0.0.0.0'; // Listen on all interfaces to allow IP access
