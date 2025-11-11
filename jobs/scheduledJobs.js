@@ -75,7 +75,8 @@ const updateOrdersToProgress = async () => {
  */
 export const startScheduledJobs = () => {
   // Skip scheduled jobs on Vercel (serverless functions don't support persistent cron)
-  if (process.env.VERCEL === '1') {
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+  if (isVercel) {
     console.log('[Scheduled Jobs] Skipping cron jobs on Vercel. Use Vercel Cron Jobs for scheduled tasks.');
     return;
   }

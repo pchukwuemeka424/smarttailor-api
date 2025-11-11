@@ -24,17 +24,53 @@ import settingsRoutes from './routes/settings.js';
 // Load environment variables
 dotenv.config();
 
-// Connect to database
-connectDB();
-
-// Start scheduled jobs once database is connected
-mongoose.connection.once('open', () => {
-  console.log('Database connection established. Starting scheduled jobs...');
-  startScheduledJobs();
-});
-
 // Initialize Express app
 const app = express();
+
+// Connect to database (lazy connection for serverless)
+let dbConnected = false;
+const ensureDBConnection = async () => {
+  if (!dbConnected && mongoose.connection.readyState !== 1) {
+    try {
+      await connectDB();
+      dbConnected = true;
+      
+      // Start scheduled jobs only if not on Vercel
+      const isVercelEnv = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+      if (!isVercelEnv) {
+        mongoose.connection.once('open', () => {
+          console.log('Database connection established. Starting scheduled jobs...');
+          startScheduledJobs();
+        });
+      }
+    } catch (error) {
+      console.error('Failed to connect to database:', error);
+      // Don't throw - let routes handle the error
+    }
+  }
+};
+
+// For Vercel, connect on first request (lazy connection)
+// Vercel sets VERCEL or VERCEL_ENV environment variables
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+
+if (isVercel) {
+  // Middleware to ensure DB connection on each request (for serverless)
+  app.use(async (req, res, next) => {
+    await ensureDBConnection();
+    next();
+  });
+} else {
+  // For local development, connect immediately
+  connectDB().then(() => {
+    mongoose.connection.once('open', () => {
+      console.log('Database connection established. Starting scheduled jobs...');
+      startScheduledJobs();
+    });
+  }).catch(err => {
+    console.error('Database connection failed:', err);
+  });
+}
 
 // Set EJS as view engine
 app.set('view engine', 'ejs');
@@ -143,7 +179,8 @@ app.use((req, res) => {
 export default app;
 
 // Start server only if not in Vercel environment
-if (process.env.VERCEL !== '1') {
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+if (!isVercel) {
   const PORT = process.env.PORT || 3000;
   const HOST = '0.0.0.0'; // Listen on all interfaces to allow IP access
 
