@@ -98,10 +98,61 @@ The server is configured to listen on `0.0.0.0`, making it accessible via IP add
 
 3. Make sure your mobile device and development machine are on the same network.
 
+## Deployment to Vercel
+
+This backend is configured for deployment on Vercel.
+
+### Prerequisites
+1. Install Vercel CLI:
+   ```bash
+   npm i -g vercel
+   ```
+
+2. Login to Vercel:
+   ```bash
+   vercel login
+   ```
+
+### Deploy
+
+1. From the backend directory, run:
+   ```bash
+   vercel
+   ```
+
+2. Follow the prompts to link your project or create a new one.
+
+3. Add environment variables in Vercel dashboard:
+   - Go to your project settings → Environment Variables
+   - Add all required environment variables (see below)
+
+4. For production deployment:
+   ```bash
+   vercel --prod
+   ```
+
+### Environment Variables for Vercel
+
+Add these in your Vercel project settings:
+- `MONGODB_URI` - MongoDB connection string
+- `FLW_PUBLIC_KEY` - Flutterwave public key (if using payments)
+- `FLW_SECRET_KEY` - Flutterwave secret key (if using payments)
+- `AWS_ACCESS_KEY_ID` - AWS S3 access key (if using S3)
+- `AWS_SECRET_ACCESS_KEY` - AWS S3 secret key (if using S3)
+- `AWS_REGION` - AWS region (if using S3)
+- `AWS_S3_BUCKET_NAME` - S3 bucket name (if using S3)
+- Any other environment variables your app requires
+
+### Important Notes
+
+- Scheduled jobs (node-cron) may not work reliably on Vercel serverless functions. Consider using Vercel Cron Jobs or external cron services for scheduled tasks.
+- The API will be available at `https://your-project.vercel.app`
+- All routes are automatically routed through the serverless function
+
 ## Environment Variables
 
 - `MONGODB_URI` - MongoDB connection string
-- `PORT` - Server port (default: 3000)
+- `PORT` - Server port (default: 3000, not used on Vercel)
 - `NODE_ENV` - Environment (development/production)
 
 ## Database Models

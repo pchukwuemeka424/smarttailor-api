@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Account - SmartTailor NG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            overflow: hidden;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 10px;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #111827;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #6B7280;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        input::placeholder {
+            color: #9CA3AF;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #6B7280;
+            margin-top: 6px;
+        }
+        
+        .error-message {
+            background: #FEF2F2;
+            color: #DC2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .button {
+            background: #EF4444;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        
+        .button:hover {
+            background: #DC2626;
+        }
+        
+        .button:active {
+            transform: scale(0.98);
+        }
+        
+        .button:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+        }
+        
+        .button-secondary {
+            background: #E5E7EB;
+            color: #374151;
+        }
+        
+        .button-secondary:hover {
+            background: #D1D5DB;
+        }
+        
+        .info-box {
+            background: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+        
+        .info-box p {
+            color: #1E40AF;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <% 
+            const logo = typeof logoUrl !== 'undefined' ? logoUrl : null;
+            const name = typeof appName !== 'undefined' ? appName : 'Smart Tailor';
+            if (logo) { 
+            %>
+                <img src="<%= logo %>" alt="<%= name %> Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'logo-text\'>ST</span>'">
+            <% } else { %>
+                <span class="logo-text">ST</span>
+            <% } %>
+        </div>
+        <h1>Delete Account</h1>
+        <p class="subtitle">Enter your phone number to proceed with account deletion</p>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <form id="deleteAccountForm" method="POST" action="/api/auth/delete-account-by-phone">
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    placeholder="08012345678"
+                    required
+                    pattern="[0-9]{11}"
+                    maxlength="11"
+                    autocomplete="tel"
+                >
+                <p class="help-text">Enter your 11-digit phone number (e.g., 08012345678)</p>
+            </div>
+            
+            <div class="info-box">
+                <p>
+                    <strong>⚠️ Warning:</strong> This action cannot be undone. All your data including customers, orders, measurements, and notifications will be permanently deleted.
+                </p>
+            </div>
+            
+            <button type="submit" class="button" id="submitButton">Delete Account</button>
+            <button type="button" class="button button-secondary" onclick="window.location.href='/'">Cancel</button>
+        </form>
+    </div>
+    
+    <script>
+        const form = document.getElementById('deleteAccountForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const submitButton = document.getElementById('submitButton');
+        const phoneInput = document.getElementById('phone');
+        
+        // Format phone number input (only digits)
+        phoneInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const phone = formData.get('phone').replace(/\D/g, '');
+            
+            // Validate phone number
+            if (!phone || phone.length !== 11) {
+                showError('Please enter a valid 11-digit phone number');
+                return;
+            }
+            
+            // Disable button during submission
+            submitButton.disabled = true;
+            submitButton.textContent = 'Deleting Account...';
+            hideError();
+            
+            try {
+                const response = await fetch('/api/auth/delete-account-by-phone', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone: phone
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Redirect to success page
+                    window.location.href = `/api/auth/delete-account/result?success=true&message=${encodeURIComponent(data.message)}`;
+                } else {
+                    showError(data.message || 'Failed to delete account');
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Delete Account';
+                }
+            } catch (error) {
+                showError('An error occurred. Please try again.');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Delete Account';
+            }
+        });
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                hideError();
+            }, 5000);
+        }
+        
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
+
