@@ -20,57 +20,23 @@ import subscriptionRoutes from './routes/subscription.js';
 import paymentRoutes from './routes/payment.js';
 import adminRoutes from './routes/admin.js';
 import settingsRoutes from './routes/settings.js';
+import homeRoutes from './routes/home.js';
 
 // Load environment variables
 dotenv.config();
 
-// Check if running on Vercel (serverless)
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-
 // Initialize Express app
 const app = express();
 
-// Connect to database (lazy connection for serverless)
-let dbConnected = false;
-const ensureDBConnection = async () => {
-  if (!dbConnected && mongoose.connection.readyState !== 1) {
-    try {
-      await connectDB();
-      dbConnected = true;
-      
-      // Start scheduled jobs only if not on Vercel
-      const isVercelEnv = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-      if (!isVercelEnv) {
-        mongoose.connection.once('open', () => {
-          console.log('Database connection established. Starting scheduled jobs...');
-          startScheduledJobs();
-        });
-      }
-    } catch (error) {
-      console.error('Failed to connect to database:', error);
-      // Don't throw - let routes handle the error
-    }
-  }
-};
-
-// For Vercel, connect on first request (lazy connection)
-if (isVercel) {
-  // Middleware to ensure DB connection on each request (for serverless)
-  app.use(async (req, res, next) => {
-    await ensureDBConnection();
-    next();
+// Connect to database
+connectDB().then(() => {
+  mongoose.connection.once('open', () => {
+    console.log('Database connection established. Starting scheduled jobs...');
+    startScheduledJobs();
   });
-} else {
-  // For local development, connect immediately
-  connectDB().then(() => {
-    mongoose.connection.once('open', () => {
-      console.log('Database connection established. Starting scheduled jobs...');
-      startScheduledJobs();
-    });
-  }).catch(err => {
-    console.error('Database connection failed:', err);
-  });
-}
+}).catch(err => {
+  console.error('Database connection failed:', err);
+});
 
 // Set EJS as view engine
 app.set('view engine', 'ejs');
@@ -86,6 +52,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Routes
+app.use('/api/home', homeRoutes);
 app.use('/api/auth', authRoutes);
 console.log('Auth routes registered:');
 console.log('  - POST /api/auth/signup');
@@ -110,6 +77,8 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
+console.log('Home route registered:');
+console.log('  - GET /api/home');
 console.log('Settings routes registered:');
 console.log('  - GET /api/settings/test (test endpoint)');
 console.log('  - GET /api/settings/public (public)');
@@ -175,18 +144,13 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Export app for Vercel serverless functions
-export default app;
+// Start server
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0'; // Listen on all interfaces to allow IP access
 
-// Start server only if not in Vercel environment
-if (!isVercel) {
-  const PORT = process.env.PORT || 3000;
-  const HOST = '0.0.0.0'; // Listen on all interfaces to allow IP access
-
-  app.listen(PORT, HOST, () => {
-    console.log(`Server is running on http://${HOST}:${PORT}`);
-    console.log(`Server accessible at http://localhost:${PORT}`);
-    console.log(`To access from other devices, use your machine's IP address: http://<YOUR_IP>:${PORT}`);
-  });
-}
+app.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
+  console.log(`Server accessible at http://localhost:${PORT}`);
+  console.log(`To access from other devices, use your machine's IP address: http://<YOUR_IP>:${PORT}`);
+});
 
