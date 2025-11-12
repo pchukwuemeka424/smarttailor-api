@@ -243,38 +243,25 @@ router.put('/users/:id/subscription', isAdmin, async (req, res) => {
 // Get subscription packages/pricing
 router.get('/subscription/packages', isAdmin, async (req, res) => {
   try {
-    // This would typically come from a database, but for now we'll return the default
+    const settings = await AppSettings.getSettings();
+    const settingsObj = settings.toObject();
+    
+    // Return subscription packages from database only (no hardcoded fallbacks)
+    if (!settingsObj.subscriptionPackages || !settingsObj.subscriptionPackages.plans || settingsObj.subscriptionPackages.plans.length === 0) {
+      return res.status(404).json({ 
+        message: 'Subscription packages not found in database. Please initialize them first.' 
+      });
+    }
+    
     const packages = {
-      plans: [
-        {
-          type: 'monthly',
-          name: 'Monthly',
-          price: 500,
-          duration: '1 month',
-          savings: null,
-        },
-        {
-          type: 'quarterly',
-          name: 'Quarterly',
-          price: 1500,
-          duration: '3 months',
-          savings: 'Save ₦0 (Same as monthly)',
-        },
-        {
-          type: 'yearly',
-          name: 'Yearly',
-          price: 5000,
-          duration: '1 year',
-          savings: 'Save ₦1000 (17% off)',
-        },
-      ],
-      trial: {
-        duration: '30 days',
-        price: 0,
-      },
+      plans: settingsObj.subscriptionPackages.plans,
+      trial: settingsObj.subscriptionPackages.trial,
     };
+    
+    console.log('Fetched subscription packages from database:', JSON.stringify(packages, null, 2));
     res.json(packages);
   } catch (error) {
+    console.error('Error fetching subscription packages:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -282,11 +269,70 @@ router.get('/subscription/packages', isAdmin, async (req, res) => {
 // Update subscription packages
 router.put('/subscription/packages', isAdmin, async (req, res) => {
   try {
-    // In a real app, this would save to a database
-    // For now, we'll just return success
-    res.json({ message: 'Subscription packages updated successfully', packages: req.body });
+    const { plans, trial } = req.body;
+    
+    // Validate input
+    if (!plans || !Array.isArray(plans) || plans.length === 0) {
+      return res.status(400).json({ message: 'Plans array is required and must not be empty' });
+    }
+    
+    // Validate each plan
+    for (const plan of plans) {
+      if (!plan.type || !['monthly', 'quarterly', 'yearly'].includes(plan.type)) {
+        return res.status(400).json({ message: `Invalid plan type: ${plan.type}. Must be monthly, quarterly, or yearly` });
+      }
+      if (!plan.name || typeof plan.name !== 'string') {
+        return res.status(400).json({ message: 'Plan name is required and must be a string' });
+      }
+      if (typeof plan.price !== 'number' || plan.price < 0) {
+        return res.status(400).json({ message: 'Plan price is required and must be a non-negative number' });
+      }
+      if (!plan.duration || typeof plan.duration !== 'string') {
+        return res.status(400).json({ message: 'Plan duration is required and must be a string' });
+      }
+    }
+    
+    // Validate trial
+    if (trial) {
+      if (trial.duration && typeof trial.duration !== 'string') {
+        return res.status(400).json({ message: 'Trial duration must be a string' });
+      }
+      if (trial.price !== undefined && (typeof trial.price !== 'number' || trial.price < 0)) {
+        return res.status(400).json({ message: 'Trial price must be a non-negative number' });
+      }
+    }
+    
+    console.log('Updating subscription packages:', { plansCount: plans.length, hasTrial: !!trial });
+    
+    // Prepare trial data - use provided trial or default structure
+    const trialData = trial || {
+      duration: '30 days',
+      price: 0,
+    };
+    
+    // Update settings in database
+    const updatedSettings = await AppSettings.updateSettings({
+      subscriptionPackages: {
+        plans,
+        trial: trialData,
+      },
+    });
+    
+    console.log('Subscription packages updated successfully in database');
+    
+    const settingsObj = updatedSettings.toObject();
+    const packages = {
+      plans: settingsObj.subscriptionPackages.plans,
+      trial: settingsObj.subscriptionPackages.trial,
+    };
+    
+    res.json({ 
+      message: 'Subscription packages updated successfully', 
+      packages 
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error updating subscription packages:', error);
+    res.status(400).json({ message: error.message || 'Failed to update subscription packages' });
   }
 });
 

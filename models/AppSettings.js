@@ -71,6 +71,47 @@ const appSettingsSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  subscriptionPackages: {
+    plans: [{
+      type: {
+        type: String,
+        enum: ['monthly', 'quarterly', 'yearly'],
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      price: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+      duration: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      savings: {
+        type: String,
+        default: null,
+        trim: true,
+      },
+    }],
+    trial: {
+      duration: {
+        type: String,
+        default: '30 days',
+        trim: true,
+      },
+      price: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+    },
+  },
 }, {
   timestamps: true,
 });
@@ -84,8 +125,41 @@ appSettingsSchema.statics.getSettings = async function() {
     // Ensure showSubscription exists for existing documents
     if (settings.showSubscription === undefined) {
       settings.showSubscription = true;
-      await settings.save();
     }
+    // Initialize subscription packages with defaults if not exists
+    if (!settings.subscriptionPackages || !settings.subscriptionPackages.plans || settings.subscriptionPackages.plans.length === 0) {
+      settings.subscriptionPackages = {
+        plans: [
+          {
+            type: 'monthly',
+            name: 'Monthly',
+            price: 500,
+            duration: '1 month',
+            savings: null,
+          },
+          {
+            type: 'quarterly',
+            name: 'Quarterly',
+            price: 1500,
+            duration: '3 months',
+            savings: 'Save ₦0 (Same as monthly)',
+          },
+          {
+            type: 'yearly',
+            name: 'Yearly',
+            price: 5000,
+            duration: '1 year',
+            savings: 'Save ₦1000 (17% off)',
+          },
+        ],
+        trial: {
+          duration: '30 days',
+          price: 0,
+        },
+      };
+      settings.markModified('subscriptionPackages');
+    }
+    await settings.save();
   }
   return settings;
 };
@@ -140,6 +214,20 @@ appSettingsSchema.statics.updateSettings = async function(updates) {
     }
     if (updates.showSubscription !== undefined) {
       settings.showSubscription = updates.showSubscription;
+    }
+    if (updates.subscriptionPackages) {
+      if (updates.subscriptionPackages.plans !== undefined) {
+        settings.subscriptionPackages.plans = updates.subscriptionPackages.plans;
+      }
+      if (updates.subscriptionPackages.trial !== undefined) {
+        if (updates.subscriptionPackages.trial.duration !== undefined) {
+          settings.subscriptionPackages.trial.duration = updates.subscriptionPackages.trial.duration;
+        }
+        if (updates.subscriptionPackages.trial.price !== undefined) {
+          settings.subscriptionPackages.trial.price = updates.subscriptionPackages.trial.price;
+        }
+      }
+      settings.markModified('subscriptionPackages');
     }
     await settings.save();
   }

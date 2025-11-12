@@ -1,5 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
+import AppSettings from '../models/AppSettings.js';
 
 const router = express.Router();
 
@@ -171,37 +172,26 @@ router.post('/upgrade', async (req, res) => {
 // Get subscription pricing
 router.get('/pricing', async (req, res) => {
   try {
-    console.log('Pricing endpoint called');
+    console.log('Pricing endpoint called - fetching from database');
+    
+    // Fetch subscription packages from database
+    const settings = await AppSettings.getSettings();
+    const settingsObj = settings.toObject();
+    
+    // Return subscription packages from database only (no hardcoded fallbacks)
+    if (!settingsObj.subscriptionPackages || !settingsObj.subscriptionPackages.plans || settingsObj.subscriptionPackages.plans.length === 0) {
+      console.error('Subscription packages not found in database');
+      return res.status(404).json({ 
+        message: 'Subscription packages not available. Please contact administrator.' 
+      });
+    }
+    
     const pricingData = {
-      plans: [
-        {
-          type: 'monthly',
-          name: 'Monthly',
-          price: 500,
-          duration: '1 month',
-          savings: null,
-        },
-        {
-          type: 'quarterly',
-          name: 'Quarterly',
-          price: 1500,
-          duration: '3 months',
-          savings: 'Save ₦0 (Same as monthly)',
-        },
-        {
-          type: 'yearly',
-          name: 'Yearly',
-          price: 5000,
-          duration: '1 year',
-          savings: 'Save ₦1000 (17% off)',
-        },
-      ],
-      trial: {
-        duration: '30 days',
-        price: 0,
-      },
+      plans: settingsObj.subscriptionPackages.plans,
+      trial: settingsObj.subscriptionPackages.trial,
     };
-    console.log('Sending pricing data:', JSON.stringify(pricingData));
+    
+    console.log('Sending pricing data from database:', JSON.stringify(pricingData, null, 2));
     res.json(pricingData);
   } catch (error) {
     console.error('Error in pricing endpoint:', error);
