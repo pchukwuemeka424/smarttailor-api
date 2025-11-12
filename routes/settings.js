@@ -29,11 +29,16 @@ router.get('/public', async (req, res) => {
       title: settingsObj.welcomeScreen?.title,
       appName: settingsObj.welcomeScreen?.appName,
       hasLogo: !!settingsObj.welcomeScreen?.logo,
+      showSubscription: settingsObj.showSubscription,
     });
+    
+    // Ensure showSubscription is always a boolean
+    const showSubscriptionValue = settingsObj.showSubscription !== undefined ? Boolean(settingsObj.showSubscription) : true;
     
     res.json({
       welcomeScreen: settingsObj.welcomeScreen,
       headerColors: settingsObj.headerColors,
+      showSubscription: showSubscriptionValue,
     });
   } catch (error) {
     console.error('Error fetching public settings:', error);

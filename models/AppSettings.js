@@ -67,6 +67,10 @@ const appSettingsSchema = new mongoose.Schema({
       },
     }],
   },
+  showSubscription: {
+    type: Boolean,
+    default: true,
+  },
 }, {
   timestamps: true,
 });
@@ -76,6 +80,12 @@ appSettingsSchema.statics.getSettings = async function() {
   let settings = await this.findOne();
   if (!settings) {
     settings = await this.create({});
+  } else {
+    // Ensure showSubscription exists for existing documents
+    if (settings.showSubscription === undefined) {
+      settings.showSubscription = true;
+      await settings.save();
+    }
   }
   return settings;
 };
@@ -127,6 +137,9 @@ appSettingsSchema.statics.updateSettings = async function(updates) {
         settings.helpSupport.faq = updates.helpSupport.faq;
       }
       settings.markModified('helpSupport');
+    }
+    if (updates.showSubscription !== undefined) {
+      settings.showSubscription = updates.showSubscription;
     }
     await settings.save();
   }

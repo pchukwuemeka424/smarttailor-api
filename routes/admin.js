@@ -475,9 +475,13 @@ router.get('/settings', isAdmin, async (req, res) => {
       settingsObj.welcomeScreen.backgroundImage = convertToPublicUrl(settingsObj.welcomeScreen.backgroundImage);
     }
     
+    // Ensure showSubscription is always a boolean
+    const showSubscriptionValue = settingsObj.showSubscription !== undefined ? Boolean(settingsObj.showSubscription) : true;
+    
     res.json({
       welcomeScreen: settingsObj.welcomeScreen,
       headerColors: settingsObj.headerColors,
+      showSubscription: showSubscriptionValue,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -487,26 +491,36 @@ router.get('/settings', isAdmin, async (req, res) => {
 // Update app settings
 router.put('/settings', isAdmin, async (req, res) => {
   try {
-    const { welcomeScreen, headerColors, phone } = req.body;
+    const { welcomeScreen, headerColors, showSubscription, phone } = req.body;
     
     console.log('Updating app settings:', { 
       hasWelcomeScreen: !!welcomeScreen, 
       hasHeaderColors: !!headerColors,
+      showSubscription: showSubscription,
+      showSubscriptionType: typeof showSubscription,
       phone: phone ? 'provided' : 'missing'
     });
     
     // Validate input
-    if (!welcomeScreen && !headerColors) {
-      return res.status(400).json({ message: 'At least one setting group (welcomeScreen or headerColors) is required' });
+    if (!welcomeScreen && !headerColors && showSubscription === undefined) {
+      return res.status(400).json({ message: 'At least one setting group is required' });
+    }
+    
+    // Prepare update object - only include fields that are provided
+    const updateData = {};
+    if (welcomeScreen) updateData.welcomeScreen = welcomeScreen;
+    if (headerColors) updateData.headerColors = headerColors;
+    if (showSubscription !== undefined) {
+      // Ensure boolean value
+      updateData.showSubscription = Boolean(showSubscription);
+      console.log('Setting showSubscription to:', updateData.showSubscription, '(type:', typeof updateData.showSubscription, ')');
     }
     
     // Update settings in database
-    const updatedSettings = await AppSettings.updateSettings({
-      welcomeScreen,
-      headerColors,
-    });
+    const updatedSettings = await AppSettings.updateSettings(updateData);
     
     console.log('Settings updated successfully in database');
+    console.log('Current showSubscription value:', updatedSettings.showSubscription);
     
     // Convert background image URL to public URL if it's an S3 URL
     const settingsObj = updatedSettings.toObject();
@@ -517,11 +531,15 @@ router.put('/settings', isAdmin, async (req, res) => {
       settingsObj.welcomeScreen.logo = convertToPublicUrl(settingsObj.welcomeScreen.logo);
     }
     
+    // Ensure showSubscription is always a boolean
+    const finalShowSubscription = settingsObj.showSubscription !== undefined ? Boolean(settingsObj.showSubscription) : true;
+    
     res.json({ 
       message: 'Settings updated successfully', 
       settings: {
         welcomeScreen: settingsObj.welcomeScreen,
         headerColors: settingsObj.headerColors,
+        showSubscription: finalShowSubscription,
       }
     });
   } catch (error) {
