@@ -20,6 +20,7 @@ import subscriptionRoutes from './routes/subscription.js';
 import paymentRoutes from './routes/payment.js';
 import adminRoutes from './routes/admin.js';
 import settingsRoutes from './routes/settings.js';
+import helpSupportRoutes from './routes/helpSupport.js';
 import homeRoutes from './routes/home.js';
 
 // Load environment variables
@@ -144,12 +145,15 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/help-support', helpSupportRoutes);
 app.use('/api/admin', adminRoutes);
 console.log('Home route registered:');
 console.log('  - GET /api/home');
 console.log('Settings routes registered:');
 console.log('  - GET /api/settings/test (test endpoint)');
 console.log('  - GET /api/settings/public (public)');
+console.log('Help & Support routes registered:');
+console.log('  - GET /api/help-support/public (public)');
 console.log('Subscription routes registered:');
 console.log('  - GET /api/subscription/test');
 console.log('  - GET /api/subscription/status');
@@ -173,6 +177,8 @@ console.log('  - PUT /api/admin/settings');
 console.log('  - POST /api/admin/settings/welcome-background');
 console.log('  - POST /api/admin/settings/welcome-logo');
 console.log('  - GET /api/admin/stats');
+console.log('  - GET /api/admin/help-support');
+console.log('  - PUT /api/admin/help-support');
 
 // Health check route
 app.get('/api/health', (req, res) => {

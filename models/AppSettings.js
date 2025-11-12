@@ -45,6 +45,28 @@ const appSettingsSchema = new mongoose.Schema({
       trim: true,
     },
   },
+  helpSupport: {
+    emailSupport: {
+      type: String,
+      trim: true,
+    },
+    phoneSupport: {
+      type: String,
+      trim: true,
+    },
+    faq: [{
+      question: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      answer: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+    }],
+  },
 }, {
   timestamps: true,
 });
@@ -93,6 +115,18 @@ appSettingsSchema.statics.updateSettings = async function(updates) {
         settings.headerColors.text = updates.headerColors.text;
       }
       settings.markModified('headerColors');
+    }
+    if (updates.helpSupport) {
+      if (updates.helpSupport.emailSupport !== undefined) {
+        settings.helpSupport.emailSupport = updates.helpSupport.emailSupport;
+      }
+      if (updates.helpSupport.phoneSupport !== undefined) {
+        settings.helpSupport.phoneSupport = updates.helpSupport.phoneSupport;
+      }
+      if (updates.helpSupport.faq !== undefined) {
+        settings.helpSupport.faq = updates.helpSupport.faq;
+      }
+      settings.markModified('helpSupport');
     }
     await settings.save();
   }

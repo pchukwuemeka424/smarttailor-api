@@ -692,5 +692,66 @@ router.get('/stats', isAdmin, async (req, res) => {
   }
 });
 
+// Get help & support (admin only)
+router.get('/help-support', isAdmin, async (req, res) => {
+  try {
+    const settings = await AppSettings.getSettings();
+    const settingsObj = settings.toObject();
+    
+    // Return data from database only, no defaults
+    res.json({
+      emailSupport: settingsObj.helpSupport?.emailSupport || '',
+      phoneSupport: settingsObj.helpSupport?.phoneSupport || '',
+      faq: settingsObj.helpSupport?.faq || [],
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update help & support
+router.put('/help-support', isAdmin, async (req, res) => {
+  try {
+    const { emailSupport, phoneSupport, faq } = req.body;
+    
+    // Validate input
+    if (!emailSupport || !phoneSupport) {
+      return res.status(400).json({ message: 'Email support and phone support are required' });
+    }
+    
+    // Validate FAQ array if provided
+    if (faq && Array.isArray(faq)) {
+      for (const item of faq) {
+        if (!item.question || !item.answer) {
+          return res.status(400).json({ message: 'Each FAQ item must have both question and answer' });
+        }
+      }
+    }
+    
+    // Update settings in database
+    const updatedSettings = await AppSettings.updateSettings({
+      helpSupport: {
+        emailSupport,
+        phoneSupport,
+        faq: faq || [],
+      },
+    });
+    
+    const settingsObj = updatedSettings.toObject();
+    
+    res.json({ 
+      message: 'Help & Support updated successfully', 
+      helpSupport: {
+        emailSupport: settingsObj.helpSupport.emailSupport,
+        phoneSupport: settingsObj.helpSupport.phoneSupport,
+        faq: settingsObj.helpSupport.faq || [],
+      }
+    });
+  } catch (error) {
+    console.error('Error updating help & support:', error);
+    res.status(400).json({ message: error.message || 'Failed to update help & support' });
+  }
+});
+
 export default router;
 

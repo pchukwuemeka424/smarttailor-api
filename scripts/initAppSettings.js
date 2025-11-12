@@ -21,12 +21,22 @@ async function initAppSettings() {
     if (settings) {
       console.log('✅ AppSettings already exists in database');
       console.log('Current settings:');
-      console.log(JSON.stringify(settings.toObject(), null, 2));
+      const settingsObj = settings.toObject();
+      console.log(JSON.stringify({
+        welcomeScreen: settingsObj.welcomeScreen,
+        headerColors: settingsObj.headerColors,
+        helpSupport: settingsObj.helpSupport || null,
+      }, null, 2));
     } else {
-      console.log('Creating default app settings...');
+      console.log('Creating new app settings document...');
       settings = await AppSettings.create({});
-      console.log('✅ Default app settings created successfully');
-      console.log('Settings:', JSON.stringify(settings.toObject(), null, 2));
+      console.log('✅ App settings document created successfully');
+      const settingsObj = settings.toObject();
+      console.log('Settings:', JSON.stringify({
+        welcomeScreen: settingsObj.welcomeScreen,
+        headerColors: settingsObj.headerColors,
+        helpSupport: settingsObj.helpSupport || null,
+      }, null, 2));
     }
     
     console.log('\n✅ AppSettings initialization completed!');
