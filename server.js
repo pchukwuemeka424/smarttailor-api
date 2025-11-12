@@ -149,6 +149,7 @@ app.use('/api/help-support', helpSupportRoutes);
 app.use('/api/admin', adminRoutes);
 console.log('Home route registered:');
 console.log('  - GET /api/home');
+console.log('  - GET /api/home/privacy-policy (privacy policy page)');
 console.log('Settings routes registered:');
 console.log('  - GET /api/settings/test (test endpoint)');
 console.log('  - GET /api/settings/public (public)');

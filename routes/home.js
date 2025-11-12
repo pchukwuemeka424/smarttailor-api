@@ -25,5 +25,10 @@ router.get('/', (req, res) => {
   });
 });
 
+// Privacy Policy route
+router.get('/privacy-policy', (req, res) => {
+  res.render('privacy-policy');
+});
+
 export default router;
 
